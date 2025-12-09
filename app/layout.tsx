@@ -12,8 +12,11 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "FogX",
-	description: "A high-security, real-time chat application.",
+	title: {
+		default: "FogX",
+		template: "%s | FogX",
+	},
+	description: "A private, self-destructing chat room.",
 };
 
 function RootLayout({ children }: Readonly<PropsWithChildren>) {
