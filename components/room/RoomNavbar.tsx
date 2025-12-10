@@ -28,7 +28,7 @@ function RoomNavbar({ roomId }: Props) {
 	};
 
 	return (
-		<header className="bg-sidebar/50 backdrop-blur-xl border-b py-4 px-4 flex items-center justify-between gap-4 sm:gap-8">
+		<header className="bg-card/50 backdrop-blur-xl border-b py-4 px-4 flex items-center justify-between gap-4 sm:gap-8">
 			{/* Room ID Section */}
 			<div className="flex flex-1 flex-col sm:flex-row sm:items-center sm:gap-2">
 				<span className="text-xs text-muted uppercase sm:mr-2">
