@@ -27,3 +27,14 @@ export function isLinkActive(currentPath: string, linkPath: string): boolean {
 
 	return result;
 }
+
+/**
+ * Format time remaining in seconds to mm:ss format
+ * @param seconds - The number of seconds
+ * @returns The formatted time remaining
+ */
+export function formatTimeRemaining(seconds: number) {
+	const mins = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+	return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
