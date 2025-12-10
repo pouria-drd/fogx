@@ -10,7 +10,7 @@ function Lobby() {
 	const { username, saveToClipboard, regenerateUsername } = useUsername();
 
 	function handleCreateRoom() {
-		createRoom();
+		createRoom("test");
 	}
 
 	return (

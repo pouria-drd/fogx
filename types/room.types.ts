@@ -1,4 +1,4 @@
-export interface CreateRoomInput {
+export interface CreateRoomData {
 	username: string;
 }
 

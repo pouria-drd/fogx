@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 
-import { roomsApi } from "@/lib/api";
+import { RoomService } from "@/services";
 import { ApiClientError } from "@/lib/api";
 
 /**
@@ -10,10 +10,7 @@ import { ApiClientError } from "@/lib/api";
  */
 function useRoom() {
 	const { mutate: createRoom } = useMutation({
-		mutationFn: () =>
-			roomsApi.createRoom({
-				username: "test",
-			}),
+		mutationFn: (username: string) => RoomService.createRoom({ username }),
 
 		onError: (err) => {
 			if (err instanceof ApiClientError) {
