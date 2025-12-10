@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { PropsWithChildren } from "react";
 import { JetBrains_Mono } from "next/font/google";
 
+import { Toaster } from "@/components/ui";
 import { ReactQueryProvider, ThemeProvider } from "@/components/context";
 
 const jetBrainsMono = JetBrains_Mono({
@@ -26,6 +27,7 @@ function RootLayout({ children }: Readonly<PropsWithChildren>) {
 				<ReactQueryProvider>
 					<ThemeProvider attribute="class" defaultTheme="system">
 						{children}
+						<Toaster position="top-center" />
 					</ThemeProvider>
 				</ReactQueryProvider>
 			</body>

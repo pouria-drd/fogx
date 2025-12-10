@@ -1,4 +1,14 @@
 /**
+ * Configuration options for the API client
+ */
+export interface ApiClientConfig {
+	baseURL: string;
+	headers?: HeadersInit;
+	/** Optional: Callback to retrieve dynamic tokens (e.g. from localStorage) */
+	getToken?: () => string | null;
+}
+
+/**
  * A single backend error item
  */
 export interface BackendErrorItem {

@@ -1,6 +1,8 @@
 "use client";
 
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
+
 import { generateUsername } from "@/lib/utils/user.utils";
 import { USERNAME_STORAGE_KEY } from "@/constants/user.consts";
 
@@ -41,10 +43,10 @@ function useUsername() {
 	function saveToClipboard() {
 		if (username && window.navigator.clipboard) {
 			window.navigator.clipboard.writeText(username);
-			alert("Username copied to clipboard");
+			toast.success("Username copied to clipboard");
 			return;
 		}
-		alert("Failed to copy to clipboard");
+		toast.error("Failed to copy to clipboard");
 	}
 
 	return {

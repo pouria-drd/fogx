@@ -1,101 +1,138 @@
-import { ApiClientError } from "./ApiClientError";
-import type { ApiResponse, ApiSuccess, ApiError } from "@/types";
+import { ApiClientConfig, ApiResponse, ApiSuccess, ApiError } from "@/types";
 
-export class APIClient {
-	constructor(private baseURL: string = "/api") {}
+export class ApiClient {
+	private config: ApiClientConfig;
 
-	private async parseJson<T>(res: Response): Promise<ApiResponse<T>> {
-		try {
-			return await res.json();
-		} catch {
-			throw new ApiClientError(
-				"Invalid JSON response from server",
-				res.status,
-				{},
-			);
-		}
+	constructor(config: ApiClientConfig) {
+		this.config = config;
 	}
 
-	async request<T, TBody = undefined>(
-		path: string,
-		options?: {
-			method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-			body?: TBody;
-			headers?: Record<string, string>;
-		},
-	): Promise<T> {
+	/**
+	 * Core fetch wrapper
+	 */
+	private async request<T, E extends string = string>(
+		endpoint: string,
+		init?: RequestInit,
+	): Promise<ApiResponse<T, E>> {
+		const url = `${this.config.baseURL}${endpoint}`;
+
+		// Merge headers
+		const headers: HeadersInit = {
+			"Content-Type": "application/json",
+			...this.config.headers,
+			...init?.headers,
+		};
+
+		// Inject Auth Token if exists
+		if (this.config.getToken) {
+			const token = this.config.getToken();
+			if (token) {
+				(headers as Record<string, string>)[
+					"Authorization"
+				] = `Bearer ${token}`;
+			}
+		}
+
 		try {
-			const res = await fetch(`${this.baseURL}${path}`, {
-				method: options?.method ?? "GET",
-				headers: {
-					"Content-Type": "application/json",
-					...(options?.headers || {}),
-				},
-				body: options?.body ? JSON.stringify(options.body) : undefined,
+			const response = await fetch(url, {
+				...init,
+				headers,
 			});
 
-			// Handle HTTP errors
-			if (!res.ok) {
-				let json: Partial<ApiError> | null = null;
-				try {
-					json = await res.json();
-				} catch {
-					// Ignore JSON parse errors
-				}
-				throw new ApiClientError(
-					json?.message || res.statusText || "HTTP error",
-					res.status,
-					json?.errors || {},
-				);
+			// Handle empty bodies (e.g. 204 No Content)
+			if (response.status === 204) {
+				return {
+					success: true,
+					statusCode: 204,
+					message: "No Content",
+					result: {} as T,
+				};
 			}
 
-			const json = await this.parseJson<T>(res);
+			const data = await response.json();
 
-			if (!json.success) {
-				const err = json as ApiError;
-				throw new ApiClientError(
-					err.message,
-					err.statusCode,
-					err.errors,
-				);
-			}
+			// IMPORTANT: Ensure the runtime object satisfies BaseApi
+			// If the backend doesn't explicitly send 'statusCode' in the body, we inject it here.
+			const result = {
+				...data,
+				statusCode: data.statusCode ?? response.status,
+			};
 
-			return (json as ApiSuccess<T>).result;
-		} catch (err: unknown) {
-			if (process.env.NODE_ENV === "development") {
-				console.error("API Client Error:", err);
-			}
-
-			if (err instanceof ApiClientError) {
-				throw err;
-			}
-			if (err instanceof Error) {
-				// Network error or unexpected error
-				throw new ApiClientError(err.message, 0, {});
-			}
-			throw new ApiClientError("Unknown error occurred", 0, {});
+			return result as ApiResponse<T, E>;
+		} catch (error) {
+			// Handle Network Errors (offline, CORS, etc)
+			return {
+				success: false,
+				statusCode: 0, // 0 usually denotes network error
+				message:
+					error instanceof Error ? error.message : "Network Error",
+				errors: {
+					form: [{ message: "Unable to connect to server" }],
+				},
+			} as ApiError<E>;
 		}
 	}
 
-	get<T>(path: string) {
-		return this.request<T>(path);
+	// --- Public Methods ---
+
+	public get<T, E extends string = string>(path: string, init?: RequestInit) {
+		return this.request<T, E>(path, { ...init, method: "GET" });
 	}
 
-	post<T, TBody>(path: string, body: TBody) {
-		return this.request<T, TBody>(path, { method: "POST", body });
+	public post<T, E extends string = string>(
+		path: string,
+		body: unknown,
+		init?: RequestInit,
+	) {
+		return this.request<T, E>(path, {
+			...init,
+			method: "POST",
+			body: JSON.stringify(body),
+		});
 	}
 
-	put<T, TBody>(path: string, body: TBody) {
-		return this.request<T, TBody>(path, { method: "PUT", body });
+	public put<T, E extends string = string>(
+		path: string,
+		body: unknown,
+		init?: RequestInit,
+	) {
+		return this.request<T, E>(path, {
+			...init,
+			method: "PUT",
+			body: JSON.stringify(body),
+		});
 	}
 
-	patch<T, TBody>(path: string, body: TBody) {
-		return this.request<T, TBody>(path, { method: "PATCH", body });
+	public patch<T, E extends string = string>(
+		path: string,
+		body: unknown,
+		init?: RequestInit,
+	) {
+		return this.request<T, E>(path, {
+			...init,
+			method: "PATCH",
+			body: JSON.stringify(body),
+		});
 	}
 
-	delete<T>(path: string) {
-		return this.request<T>(path, { method: "DELETE" });
+	public delete<T, E extends string = string>(
+		path: string,
+		init?: RequestInit,
+	) {
+		return this.request<T, E>(path, { ...init, method: "DELETE" });
 	}
 }
 
-export const apiClient = new APIClient("/api");
+/**
+ * Type Guard to check if response is successful.
+ * This helps TypeScript strict mode know that 'result' exists.
+ */
+export function isApiSuccess<T, E extends string>(
+	response: ApiResponse<T, E>,
+): response is ApiSuccess<T> {
+	return response.success === true;
+}
+
+export const apiClient = new ApiClient({
+	baseURL: "/api",
+});

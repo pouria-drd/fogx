@@ -1,9 +1,22 @@
 import z from "zod";
+import { User } from "./user.types";
 import { roomSchema } from "@/lib/validations";
 
-export type CreateRoomData = z.infer<ReturnType<typeof roomSchema>>;
+export type HostRoomData = z.infer<ReturnType<typeof roomSchema>>;
 
-export interface CreateRoomResponse {
+export interface HostRoomResponse {
 	roomId: string;
-	username: string;
 }
+
+export type Room = {
+	id: string;
+
+	owner: User;
+
+	participants: User[];
+	maxParticipants: number;
+	onlineParticipants?: User[];
+
+	ttl: number;
+	createdAt: number;
+};

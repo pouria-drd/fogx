@@ -9,5 +9,7 @@ export const roomSchema = () => {
 				new RegExp(`^anonymous-(${ANIMALS.join("|")})-[A-Za-z0-9]{6}$`),
 				"Invalid username format",
 			),
+
+		minutes: z.number().min(1).max(60),
 	});
 };
