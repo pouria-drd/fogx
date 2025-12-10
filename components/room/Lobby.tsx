@@ -2,11 +2,16 @@
 
 import { CopyIcon, RefreshCwIcon } from "lucide-react";
 
-import { useUsername } from "@/hooks";
+import { useRoom, useUsername } from "@/hooks";
 import { Button, Card, CardContent, CardFooter, Label } from "@/components/ui";
 
 function Lobby() {
+	const { createRoom } = useRoom();
 	const { username, saveToClipboard, regenerateUsername } = useUsername();
+
+	function handleCreateRoom() {
+		createRoom();
+	}
 
 	return (
 		<Card className="w-full max-w-sm">
@@ -35,7 +40,10 @@ function Lobby() {
 				</div>
 			</CardContent>
 			<CardFooter className="flex-col gap-2">
-				<Button variant="outline" className="w-full">
+				<Button
+					variant="outline"
+					className="w-full"
+					onClick={handleCreateRoom}>
 					CREATE SECURE ROOM
 				</Button>
 			</CardFooter>
