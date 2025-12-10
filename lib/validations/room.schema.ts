@@ -11,5 +11,6 @@ export const roomSchema = () => {
 			),
 
 		minutes: z.number().min(1).max(60),
+		maxParticipants: z.number().min(2).max(10),
 	});
 };

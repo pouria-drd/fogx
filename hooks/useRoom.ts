@@ -2,19 +2,22 @@
 
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { RoomService } from "@/services";
-import type { ApiError, HostRoomData, HostRoomResponse } from "@/types";
+import type { ApiError, HostRoomData, Room } from "@/types";
 
 /**
  * Hook to create a new room.
  */
 function useRoom() {
-	const {
-		mutate: hostRoom,
-		isPending,
-		error,
-	} = useMutation<HostRoomResponse, ApiError, HostRoomData>({
+	const router = useRouter();
+
+	const { mutate: hostRoom, isPending } = useMutation<
+		Room,
+		ApiError,
+		HostRoomData
+	>({
 		// Pass the data argument to the service
 		mutationFn: (data) => RoomService.hostRoom(data),
 
@@ -33,20 +36,28 @@ function useRoom() {
 			}
 
 			// Example: Log specific validation errors
-			console.error("Validation errors:", err.errors);
+			if (process.env.NODE_ENV === "development") {
+				console.error("Validation errors:", err.errors);
+			}
 		},
 
 		onSuccess: (room) => {
-			// 'room' is typed as HostRoomResponse
+			// log room data in development
+			if (process.env.NODE_ENV === "development") {
+				console.log("Room Data:", room);
+			}
+
+			// Show success toast message
 			toast.success("Room created successfully!");
-			console.log("Room ID:", room.roomId); // assuming room has an id
+
+			// Navigate to the room page
+			router.push(`/rooms/${room.id}` as "/");
 		},
 	});
 
 	return {
 		hostRoom,
 		isPending,
-		error,
 	};
 }
 

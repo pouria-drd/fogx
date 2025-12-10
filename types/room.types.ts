@@ -4,10 +4,6 @@ import { roomSchema } from "@/lib/validations";
 
 export type HostRoomData = z.infer<ReturnType<typeof roomSchema>>;
 
-export interface HostRoomResponse {
-	roomId: string;
-}
-
 export type Room = {
 	id: string;
 

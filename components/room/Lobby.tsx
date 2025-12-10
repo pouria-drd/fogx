@@ -1,20 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { RefreshCwIcon } from "lucide-react";
 
 import { useRoom, useUsername } from "@/hooks";
 import { MinutesSelect } from "./MinutesSelect";
-import { Button, Card, CardContent, CardFooter, Label } from "@/components/ui";
+import {
+	Button,
+	Card,
+	CardContent,
+	CardFooter,
+	Input,
+	Label,
+} from "@/components/ui";
 
 export default function Lobby() {
 	const [minutes, setMinutes] = useState(10);
+	const [maxParticipants, setMaxParticipants] = useState(2);
 
-	const { hostRoom } = useRoom();
+	const { hostRoom, isPending } = useRoom();
 	const { username, regenerateUsername } = useUsername();
 
 	function handleCreateRoom() {
-		hostRoom({ username, minutes });
+		hostRoom({ username, minutes, maxParticipants });
+	}
+
+	function handleMaxParticipantsChange(e: ChangeEvent<HTMLInputElement>) {
+		setMaxParticipants(Math.max(2, Math.min(10, Number(e.target.value))));
 	}
 
 	return (
@@ -39,20 +51,45 @@ export default function Lobby() {
 					</div>
 				</div>
 
-				{/* Minutes Selection */}
-				<div className="flex flex-col gap-2">
-					<Label>Room Expiration Time</Label>
-					<MinutesSelect value={minutes} onChange={setMinutes} />
+				<div className="flex flex-col gap-4">
+					<Label>Room Settings</Label>
+
+					<div className="flex flex-col gap-2">
+						{/* Max Participants Selection */}
+						<div className="flex flex-row justify-between gap-2">
+							<Label>Max Participants</Label>
+							<Input
+								min={2}
+								max={10}
+								step={1}
+								type="number"
+								placeholder="2"
+								className="w-fit"
+								value={maxParticipants}
+								onChange={handleMaxParticipantsChange}
+							/>
+						</div>
+
+						{/* Minutes Selection */}
+						<div className="flex flex-row justify-between gap-2">
+							<Label>Expiration Time</Label>
+							<MinutesSelect
+								value={minutes}
+								onChange={setMinutes}
+							/>
+						</div>
+					</div>
 				</div>
 			</CardContent>
 
 			{/* Create Room Button */}
 			<CardFooter>
 				<Button
+					disabled={isPending}
 					variant="default"
 					className="w-full py-3 font-semibold"
 					onClick={handleCreateRoom}>
-					CREATE SECURE ROOM
+					{isPending ? "Creating room..." : "CREATE SECURE ROOM"}
 				</Button>
 			</CardFooter>
 		</Card>
