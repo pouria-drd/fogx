@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { PropsWithChildren } from "react";
 import { JetBrains_Mono } from "next/font/google";
 
-import { ThemeProvider } from "@/components/preferences";
+import { ReactQueryProvider, ThemeProvider } from "@/components/context";
 
 const jetBrainsMono = JetBrains_Mono({
 	variable: "--font-jet-brains-mono",
@@ -23,9 +23,11 @@ function RootLayout({ children }: Readonly<PropsWithChildren>) {
 	return (
 		<html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
 			<body className={`${jetBrainsMono.variable} antialiased`}>
-				<ThemeProvider attribute="class" defaultTheme="system">
-					{children}
-				</ThemeProvider>
+				<ReactQueryProvider>
+					<ThemeProvider attribute="class" defaultTheme="system">
+						{children}
+					</ThemeProvider>
+				</ReactQueryProvider>
 			</body>
 		</html>
 	);
