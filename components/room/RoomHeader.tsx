@@ -11,7 +11,7 @@ interface Props {
 	roomId: string;
 }
 
-function RoomNavbar({ roomId }: Props) {
+function RoomHeader({ roomId }: Props) {
 	const [copied, setCopied] = useState(false);
 	const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
@@ -89,4 +89,4 @@ function RoomNavbar({ roomId }: Props) {
 	);
 }
 
-export default RoomNavbar;
+export default RoomHeader;
