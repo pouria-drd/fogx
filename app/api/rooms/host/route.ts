@@ -5,9 +5,9 @@ import type { ApiSuccess, ApiError, HostRoomData, Room } from "@/types";
 
 export async function POST(req: Request) {
 	try {
-		const body = (await req.json()) as HostRoomData;
+		const data = (await req.json()) as HostRoomData;
 
-		const room = await RoomRepository.createRoom(body);
+		const room = await RoomRepository.createRoom(data);
 
 		if (room) {
 			// Success response
