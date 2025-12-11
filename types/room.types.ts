@@ -1,18 +1,15 @@
 import z from "zod";
 import { User } from "./user.types";
-import { roomSchema } from "@/lib/validations";
+import { hotRoomSchema, joinRoomSchema } from "@/lib/validations";
 
-export type HostRoomData = z.infer<ReturnType<typeof roomSchema>>;
+export type HostRoomData = z.infer<ReturnType<typeof hotRoomSchema>>;
+export type JoinRoomData = z.infer<ReturnType<typeof joinRoomSchema>>;
 
 export type Room = {
 	id: string;
-
 	owner: User;
-
 	participants: User[];
 	maxParticipants: number;
-	onlineParticipants?: User[];
-
 	ttl: number;
 	createdAt: number;
 };

@@ -10,6 +10,9 @@ export async function POST(req: Request) {
 		const room = await RoomRepository.createRoom(data);
 
 		if (room) {
+			const owner = room.owner;
+			const token = owner.id;
+
 			// Success response
 			const successResponse: ApiSuccess<Room> = {
 				success: true,
@@ -18,7 +21,18 @@ export async function POST(req: Request) {
 				result: room,
 			};
 
-			return NextResponse.json(successResponse, { status: 201 });
+			const response = NextResponse.json(successResponse, {
+				status: 201,
+			});
+
+			response.cookies.set("x-auth-token", token, {
+				path: "/",
+				httpOnly: true,
+				sameSite: "strict",
+				secure: process.env.NODE_ENV === "production",
+			});
+
+			return response;
 		}
 
 		// Error response
