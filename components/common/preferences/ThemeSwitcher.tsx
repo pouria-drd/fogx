@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ThemeType } from "@/types";
 import { THEMES } from "@/constants";
-import { useThemeSwitcher } from "@/hooks";
+import { useThemeSwitcher } from "@/lib/client/hooks";
 
 import {
 	Button,

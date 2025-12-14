@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-import { RoomService } from "@/services";
+import { RoomService } from "@/lib/client/services";
 import type { ApiError, HostRoomData, Room } from "@/types";
 
 /**

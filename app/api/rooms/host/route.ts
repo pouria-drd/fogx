@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { RoomRepository } from "@/repositories";
+import { RoomRepository } from "@/lib/server/repositories";
 import type { ApiSuccess, ApiError, HostRoomData, Room } from "@/types";
 
 export async function POST(req: Request) {

@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api";
+import { apiClient } from "@/lib/client/api";
 import type { Room, HostRoomData } from "@/types";
 
 export class RoomService {

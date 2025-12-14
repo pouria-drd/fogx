@@ -3,7 +3,7 @@
 import { ChangeEvent, useState } from "react";
 import { RefreshCwIcon } from "lucide-react";
 
-import { useRoom, useUsername } from "@/hooks";
+import { useRoom, useUsername } from "@/lib/client/hooks";
 import { MinutesSelect } from "./MinutesSelect";
 import {
 	Button,

@@ -3,8 +3,8 @@
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 
+import { USERNAME_STORAGE_KEY } from "@/constants";
 import { generateUsername } from "@/lib/utils/user.utils";
-import { USERNAME_STORAGE_KEY } from "@/constants/user.consts";
 
 /**
  * Hook to generate and store a username.

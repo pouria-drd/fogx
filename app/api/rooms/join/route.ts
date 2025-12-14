@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 
-import { RoomRepository } from "@/repositories";
+import { RoomRepository } from "@/lib/server/repositories";
 import type { ApiSuccess, ApiError, JoinRoomData, User } from "@/types";
 
 export async function POST(req: Request) {

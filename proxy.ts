@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { RoomRepository } from "@/repositories";
+import { RoomRepository } from "@/lib/server/repositories";
 
 export async function proxy(req: NextRequest) {
 	const pathname = req.nextUrl.pathname;

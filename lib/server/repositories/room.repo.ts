@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { redis } from "@/lib/db";
+import { redis } from "@/lib/server/db";
 import type { HostRoomData, Room, User } from "@/types";
 
 const keys = {
