@@ -4,8 +4,9 @@ import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
+import { isApiSuccess } from "@/lib/client/api";
 import { RoomService } from "@/lib/client/services";
-import type { ApiError, HostRoomData, Room } from "@/types";
+import type { ApiResponse, HostRoomData, Room } from "@/types";
 
 /**
  * Hook to create a new room.
@@ -14,43 +15,41 @@ function useRoom() {
 	const router = useRouter();
 
 	const { mutate: hostRoom, isPending } = useMutation<
-		Room,
-		ApiError,
-		HostRoomData
+		ApiResponse<Room>, // success value
+		ApiResponse<Room>, // error value (thrown)
+		HostRoomData // variables
 	>({
-		// Pass the data argument to the service
+		// Mutation function returns ApiResponse<Room>
 		mutationFn: (data) => RoomService.hostRoom(data),
 
 		onError: (err) => {
-			// 'err' is automatically typed as ApiError here
-
-			// 1. Show main toast message
 			toast.error(err.message || "Failed to create room");
 
-			// 2. Handle detailed form errors (Optional)
-			// If you have specific fields like 'name' or 'capacity'
-			if (err.errors?.form) {
-				err.errors.form.forEach((e) =>
-					toast.error(`Form Error: ${e.message}`),
-				);
-			}
-
-			// Example: Log specific validation errors
 			if (process.env.NODE_ENV === "development") {
-				console.error("Validation errors:", err.errors);
+				console.error("useRoom.onError:", err);
 			}
 		},
 
-		onSuccess: (room) => {
-			// log room data in development
+		onSuccess: (response) => {
+			if (!isApiSuccess(response)) {
+				toast.error(response.message);
+				return;
+			}
+
+			// Extract room from API response
+			const room = response.data;
+
+			if (!room) {
+				toast.error("Invalid room data received");
+				return;
+			}
+
 			if (process.env.NODE_ENV === "development") {
 				console.log("Room Data:", room);
 			}
 
-			// Show success toast message
 			toast.success("Room created successfully!");
 
-			// Navigate to the room page
 			router.push(`/rooms/${room.id}` as "/");
 		},
 	});

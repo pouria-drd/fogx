@@ -1,3 +1,5 @@
+import z from "zod";
+
 /**
  * Configuration options for the API client
  */
@@ -8,53 +10,26 @@ export interface ApiClientConfig {
 	getToken?: () => string | null;
 }
 
-/**
- * A single backend error item
- */
-export interface BackendErrorItem {
+interface BaseApiResponse {
 	message: string;
-	code?: string;
-}
-
-/**
- * Backend errors keyed by form field names
- */
-export type BackendErrors<TFields extends string = string> = Partial<
-	Record<"form" | TFields, BackendErrorItem[]>
->;
-
-export type BackendErrorInput =
-	| BackendErrorItem
-	| BackendErrorItem[]
-	| string
-	| null
-	| undefined;
-
-interface BaseApi {
 	statusCode: number;
 }
 
-/**
- * Successful API response
- */
-export interface ApiSuccess<T> extends BaseApi {
+export type ServerValidationSuccess<T> = {
 	success: true;
-	message: string;
-	result: T;
-}
+	data: T;
+};
 
-/**
- * Failed API response
- */
-export interface ApiError<TFields extends string = string> extends BaseApi {
+export type ServerValidationError<T> = {
 	success: false;
-	message: string;
-	errors: BackendErrors<TFields>;
-}
+	errors: z.ZodFlattenedError<T>;
+};
+
+export type ServerResult<T> =
+	| ServerValidationSuccess<T>
+	| ServerValidationError<T>;
 
 /**
  * Generic API response type
  */
-export type ApiResponse<T, TFields extends string = string> =
-	| ApiSuccess<T>
-	| ApiError<TFields>;
+export type ApiResponse<T> = BaseApiResponse & ServerResult<T>;

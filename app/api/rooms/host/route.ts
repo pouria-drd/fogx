@@ -1,31 +1,33 @@
 import { NextResponse } from "next/server";
 
-import { RoomRepository } from "@/lib/server/repositories";
-import type { ApiSuccess, ApiError, HostRoomData, Room } from "@/types";
+import { SESSION_NAME } from "@/constants";
+import { RoomService } from "@/lib/server/services";
+import type { ApiResponse, HostRoomData, Room } from "@/types";
 
 export async function POST(req: Request) {
 	try {
 		const data = (await req.json()) as HostRoomData;
 
-		const room = await RoomRepository.createRoom(data);
+		const result = await RoomService.createRoom(data);
 
-		if (room) {
+		if (result.success) {
+			const room = result.data;
 			const owner = room.owner;
 			const token = owner.id;
 
 			// Success response
-			const successResponse: ApiSuccess<Room> = {
+			const successResponse: ApiResponse<Room> = {
 				success: true,
 				statusCode: 201,
 				message: "Room created successfully",
-				result: room,
+				data: room,
 			};
 
 			const response = NextResponse.json(successResponse, {
 				status: 201,
 			});
 
-			response.cookies.set("x-auth-token", token, {
+			response.cookies.set(SESSION_NAME, token, {
 				path: "/",
 				httpOnly: true,
 				sameSite: "strict",
@@ -36,67 +38,29 @@ export async function POST(req: Request) {
 		}
 
 		// Error response
-		const errorResponse: ApiError = {
+		const errorResponse: ApiResponse<Room> = {
 			success: false,
-			statusCode: 500,
-			message: "Internal server error",
-			errors: {
-				form: [
-					{
-						message:
-							"Failed to create room. Please try again later.",
-						code: "INTERNAL_ERROR",
-					},
-				],
-			},
+			statusCode: 400,
+			message: "Invalid data!",
+			errors: result.errors,
 		};
 
-		return NextResponse.json(errorResponse, { status: 500 });
+		return NextResponse.json(errorResponse, { status: 400 });
 	} catch (error) {
+		if (process.env.NODE_ENV === "development") {
+			console.error("API.hostRoom:", error);
+		}
+
 		// Handle unexpected errors
-		const errorResponse: ApiError = {
+		const errorResponse: ApiResponse<Room> = {
 			success: false,
 			statusCode: 500,
-			message: "Internal server error",
+			message: "Internal server error!",
 			errors: {
-				form: [
-					{
-						message:
-							error instanceof Error
-								? error.message
-								: "Unknown error",
-						code: "INTERNAL_ERROR",
-					},
-				],
+				formErrors: ["Failed to create room!"],
+				fieldErrors: {},
 			},
 		};
 		return NextResponse.json(errorResponse, { status: 500 });
 	}
 }
-
-// // Validation
-// const errors: ApiError<"username" | "minutes">["errors"] = {};
-
-// if (!username || username.trim().length === 0) {
-// 	errors.username = [{ message: "Username is required", code: "REQUIRED" }];
-// }
-
-// if (!minutes || minutes < 5 || minutes > 60) {
-// 	errors.minutes = [
-// 		{
-// 			message: "Minutes must be between 5 and 60",
-// 			code: "INVALID_RANGE",
-// 		},
-// 	];
-// }
-
-// // Return validation errors
-// if (Object.keys(errors).length > 0) {
-// 	const errorResponse: ApiError<"username" | "minutes"> = {
-// 		success: false,
-// 		statusCode: 400,
-// 		message: "Validation failed",
-// 		errors,
-// 	};
-// 	return NextResponse.json(errorResponse, { status: 400 });
-// }

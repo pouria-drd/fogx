@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { SESSION_NAME } from "@/constants";
 import { RoomRepository } from "@/lib/server/repositories";
 
 export async function proxy(req: NextRequest) {
@@ -14,19 +15,21 @@ export async function proxy(req: NextRequest) {
 	const roomId = roomMatch[1];
 
 	// Check if Room Exists
-	const room = await RoomRepository.getRoom(roomId);
-	if (!room) {
+	const existingRoom = await RoomRepository.getRoom(roomId);
+	if (!existingRoom) {
 		const url = req.nextUrl.clone();
-		url.pathname = "/";
+		url.pathname = "/lobby";
 		url.searchParams.set("error", "room-not-found");
 		return NextResponse.redirect(url);
 	}
 
-	const existingToken = req.cookies.get("x-auth-token")?.value;
+	const existingToken = req.cookies.get(SESSION_NAME)?.value;
 
 	// Check if user can join room
 	if (existingToken) {
-		const user = room.participants.find((p) => p.id === existingToken);
+		const user = existingRoom.participants.find(
+			(p) => p.id === existingToken,
+		);
 		// User is allowed to join room
 		if (user) {
 			return NextResponse.next();
@@ -35,7 +38,7 @@ export async function proxy(req: NextRequest) {
 
 	// User is not allowed to join room
 	const url = req.nextUrl.clone();
-	url.pathname = "/";
+	url.pathname = "/lobby";
 	url.searchParams.set("error", "room-not-allowed");
 
 	return NextResponse.redirect(url);

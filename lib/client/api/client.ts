@@ -1,4 +1,4 @@
-import { ApiClientConfig, ApiResponse, ApiSuccess, ApiError } from "@/types";
+import { ApiClientConfig, ApiResponse } from "@/types";
 
 export class ApiClient {
 	private config: ApiClientConfig;
@@ -10,10 +10,10 @@ export class ApiClient {
 	/**
 	 * Core fetch wrapper
 	 */
-	private async request<T, E extends string = string>(
+	private async request<T>(
 		endpoint: string,
 		init?: RequestInit,
-	): Promise<ApiResponse<T, E>> {
+	): Promise<ApiResponse<T>> {
 		const url = `${this.config.baseURL}${endpoint}`;
 
 		// Merge headers
@@ -45,7 +45,7 @@ export class ApiClient {
 					success: true,
 					statusCode: 204,
 					message: "No Content",
-					result: {} as T,
+					data: {} as T,
 				};
 			}
 
@@ -58,68 +58,62 @@ export class ApiClient {
 				statusCode: data.statusCode ?? response.status,
 			};
 
-			return result as ApiResponse<T, E>;
+			return result as ApiResponse<T>;
 		} catch (error) {
-			// Handle Network Errors (offline, CORS, etc)
-			return {
+			this.logError("request", error);
+
+			const errorResponse: ApiResponse<T> = {
 				success: false,
-				statusCode: 0, // 0 usually denotes network error
-				message:
-					error instanceof Error ? error.message : "Network Error",
+				statusCode: 500,
+				message: "Internal server error!",
 				errors: {
-					form: [{ message: "Unable to connect to server" }],
+					formErrors: ["Failed to process request!"],
+					fieldErrors: {},
 				},
-			} as ApiError<E>;
+			};
+
+			return errorResponse;
 		}
 	}
 
 	// --- Public Methods ---
 
-	public get<T, E extends string = string>(path: string, init?: RequestInit) {
-		return this.request<T, E>(path, { ...init, method: "GET" });
+	public get<T>(path: string, init?: RequestInit) {
+		return this.request<T>(path, { ...init, method: "GET" });
 	}
 
-	public post<T, E extends string = string>(
-		path: string,
-		body: unknown,
-		init?: RequestInit,
-	) {
-		return this.request<T, E>(path, {
+	public post<T>(path: string, body: unknown, init?: RequestInit) {
+		return this.request<T>(path, {
 			...init,
 			method: "POST",
 			body: JSON.stringify(body),
 		});
 	}
 
-	public put<T, E extends string = string>(
-		path: string,
-		body: unknown,
-		init?: RequestInit,
-	) {
-		return this.request<T, E>(path, {
+	public put<T>(path: string, body: unknown, init?: RequestInit) {
+		return this.request<T>(path, {
 			...init,
 			method: "PUT",
 			body: JSON.stringify(body),
 		});
 	}
 
-	public patch<T, E extends string = string>(
-		path: string,
-		body: unknown,
-		init?: RequestInit,
-	) {
-		return this.request<T, E>(path, {
+	public patch<T>(path: string, body: unknown, init?: RequestInit) {
+		return this.request<T>(path, {
 			...init,
 			method: "PATCH",
 			body: JSON.stringify(body),
 		});
 	}
 
-	public delete<T, E extends string = string>(
-		path: string,
-		init?: RequestInit,
-	) {
-		return this.request<T, E>(path, { ...init, method: "DELETE" });
+	public delete<T>(path: string, init?: RequestInit) {
+		return this.request<T>(path, { ...init, method: "DELETE" });
+	}
+
+	private logError(method: string, error: unknown) {
+		if (process.env.NODE_ENV === "development") {
+			console.error(`ApiClient.${method}:`, error);
+		}
 	}
 }
 
@@ -127,9 +121,7 @@ export class ApiClient {
  * Type Guard to check if response is successful.
  * This helps TypeScript strict mode know that 'result' exists.
  */
-export function isApiSuccess<T, E extends string>(
-	response: ApiResponse<T, E>,
-): response is ApiSuccess<T> {
+export function isApiSuccess<T>(response: ApiResponse<T>) {
 	return response.success === true;
 }
 

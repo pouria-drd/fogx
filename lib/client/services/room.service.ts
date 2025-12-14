@@ -1,25 +1,23 @@
 import { apiClient } from "@/lib/client/api";
-import type { Room, HostRoomData } from "@/types";
+import type { Room, HostRoomData, ApiResponse } from "@/types";
 
 export class RoomService {
 	/**
 	 * Creates a host room.
-	 * Throws ApiError if the request fails.
+	 *
+	 * Returns ApiResponse<Room> on success
+	 * Throws ApiResponse<Room> on failure
+	 * (Required for React Query error handling)
 	 */
-	static async hostRoom(data: HostRoomData): Promise<Room> {
-		// 1. Call the API
-		// We can define specific error fields if known, e.g., 'title' | 'date'
-		const response = await apiClient.post<
-			Room,
-			keyof HostRoomData // 'keyof' is used to extract the error fields
-		>("/rooms/host", data);
+	static async hostRoom(data: HostRoomData): Promise<ApiResponse<Room>> {
+		const response = await apiClient.post<Room>("/rooms/host", data);
 
-		// 2. Handle the Result Pattern
 		if (response.success) {
-			return response.result;
+			return response;
 		}
 
-		// 3. IMPORTANT: Throw the error object so React Query detects the failure
+		// IMPORTANT:
+		// React Query detects errors ONLY via thrown values
 		throw response;
 	}
 }

@@ -3,7 +3,7 @@
 import { ChangeEvent, useState } from "react";
 import { RefreshCwIcon } from "lucide-react";
 
-import { useRoom, useUsername } from "@/lib/client/hooks";
+import { useRoom, useUsername } from "@/hooks";
 import { MinutesSelect } from "./MinutesSelect";
 import {
 	Button,
@@ -15,14 +15,14 @@ import {
 } from "@/components/ui";
 
 export default function Lobby() {
-	const [minutes, setMinutes] = useState(10);
+	const [ttlMinutes, setTTLMinutes] = useState(10);
 	const [maxParticipants, setMaxParticipants] = useState(2);
 
 	const { hostRoom, isPending } = useRoom();
 	const { username, regenerateUsername } = useUsername();
 
 	function handleCreateRoom() {
-		hostRoom({ username, minutes, maxParticipants });
+		hostRoom({ username, ttlMinutes, maxParticipants });
 	}
 
 	function handleMaxParticipantsChange(e: ChangeEvent<HTMLInputElement>) {
@@ -74,8 +74,8 @@ export default function Lobby() {
 						<div className="flex flex-row justify-between gap-2">
 							<Label>Expiration Time</Label>
 							<MinutesSelect
-								value={minutes}
-								onChange={setMinutes}
+								value={ttlMinutes}
+								onChange={setTTLMinutes}
 							/>
 						</div>
 					</div>
