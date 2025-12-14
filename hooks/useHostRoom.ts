@@ -49,9 +49,9 @@ function useHostRoom() {
 				return;
 			}
 
-			// if (process.env.NODE_ENV === "development") {
-			// 	console.log("Room Data:", room);
-			// }
+			if (process.env.NODE_ENV === "development") {
+				console.log("Room Data:", room);
+			}
 
 			toast.success("Room created successfully!");
 
