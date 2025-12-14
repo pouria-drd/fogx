@@ -9,13 +9,16 @@ export class RoomRepository {
 	 * @param data Room creation data
 	 * @returns The created Room or null on failure
 	 */
-	static async createRoom(data: HostRoomData): Promise<Room | null> {
+	static async createRoom(
+		data: HostRoomData,
+		token: string,
+	): Promise<Room | null> {
 		try {
 			const { username, ttlMinutes, maxParticipants } = data;
 
 			const roomId = nanoid();
 			const owner: User = {
-				id: nanoid(),
+				id: token,
 				username,
 			};
 
@@ -117,13 +120,14 @@ export class RoomRepository {
 			);
 
 			// Prevent duplicates
-			if (participants.some((p) => p.id === user.id)) {
-				return null;
+			const alreadyJoined = participants.find((p) => p.id === user.id);
+			if (alreadyJoined) {
+				return await this.getRoom(roomId);
 			}
 
 			// Check if room is full
 			const maxParticipants = Number(rawRoom.maxParticipants);
-			if (participants.length >= maxParticipants) {
+			if (!alreadyJoined && participants.length >= maxParticipants) {
 				return null;
 			}
 

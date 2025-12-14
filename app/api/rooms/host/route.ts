@@ -1,19 +1,20 @@
-import { NextResponse } from "next/server";
+import { nanoid } from "nanoid";
+import { NextRequest, NextResponse } from "next/server";
 
 import { SESSION_NAME } from "@/constants";
 import { RoomService } from "@/lib/server/services";
 import type { ApiResponse, HostRoomData, Room } from "@/types";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
 	try {
+		const token = req.cookies.get(SESSION_NAME)?.value ?? nanoid();
+
 		const data = (await req.json()) as HostRoomData;
 
-		const result = await RoomService.createRoom(data);
+		const result = await RoomService.createRoom(data, token);
 
 		if (result.success) {
 			const room = result.data;
-			const owner = room.owner;
-			const token = owner.id;
 
 			// Success response
 			const successResponse: ApiResponse<Room> = {

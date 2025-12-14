@@ -1,97 +1,47 @@
 "use client";
 
-import { ChangeEvent, useState } from "react";
-import { RefreshCwIcon } from "lucide-react";
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
-import { useRoom, useUsername } from "@/hooks";
-import { MinutesSelect } from "./MinutesSelect";
-import {
-	Button,
-	Card,
-	CardContent,
-	CardFooter,
-	Input,
-	Label,
-} from "@/components/ui";
+import HostRoom from "./HostRoom";
+import JoinRoom from "./JoinRoom";
+import { RoomMode } from "@/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
 
-export default function Lobby() {
-	const [ttlMinutes, setTTLMinutes] = useState(10);
-	const [maxParticipants, setMaxParticipants] = useState(2);
+function Lobby() {
+	const searchParams = useSearchParams();
 
-	const { hostRoom, isPending } = useRoom();
-	const { username, regenerateUsername } = useUsername();
+	// Get mode and optional roomId from URL
+	const urlMode = searchParams.get("mode") as RoomMode | null;
+	const urlRoomId = searchParams.get("roomId");
 
-	function handleCreateRoom() {
-		hostRoom({ username, ttlMinutes, maxParticipants });
-	}
-
-	function handleMaxParticipantsChange(e: ChangeEvent<HTMLInputElement>) {
-		setMaxParticipants(Math.max(2, Math.min(10, Number(e.target.value))));
-	}
+	// Default to "host" if invalid
+	const [mode, setMode] = useState<RoomMode>(urlMode ? urlMode : "host");
 
 	return (
-		<Card className="w-full max-w-md mx-auto">
-			<CardContent className="flex flex-col gap-6">
-				{/* Username Section */}
-				<div className="flex flex-col gap-2">
-					<Label>Your Identity</Label>
-					<div className="flex items-center justify-between bg-accent-foreground rounded-md px-3 py-2">
-						<span className="text-secondary font-mono truncate">
-							{username}
-						</span>
-						<div className="flex items-center gap-2">
-							<Button
-								size="icon-sm"
-								variant="outline"
-								onClick={regenerateUsername}
-								title="Regenerate username">
-								<RefreshCwIcon size={16} />
-							</Button>
-						</div>
-					</div>
-				</div>
+		<Tabs
+			value={mode} // controlled value
+			onValueChange={(val) => setMode(val as RoomMode)}
+			className="items-center justify-center w-full max-w-sm mx-auto">
+			<TabsList className="grid grid-cols-2 mb-3 w-full">
+				<TabsTrigger value="host" className="bg-black/60">
+					Host Room
+				</TabsTrigger>
+				<TabsTrigger value="join" className="bg-black/60">
+					Join Room
+				</TabsTrigger>
+			</TabsList>
 
-				<div className="flex flex-col gap-4">
-					<Label>Room Settings</Label>
+			<TabsContent value="host" className="w-full">
+				<HostRoom />
+			</TabsContent>
 
-					<div className="flex flex-col gap-2">
-						{/* Max Participants Selection */}
-						<div className="flex flex-row justify-between gap-2">
-							<Label>Max Participants</Label>
-							<Input
-								min={2}
-								max={10}
-								step={1}
-								type="number"
-								placeholder="2"
-								className="w-fit"
-								value={maxParticipants}
-								onChange={handleMaxParticipantsChange}
-							/>
-						</div>
-
-						{/* Minutes Selection */}
-						<div className="flex flex-row justify-between gap-2">
-							<Label>Expiration Time</Label>
-							<MinutesSelect
-								value={ttlMinutes}
-								onChange={setTTLMinutes}
-							/>
-						</div>
-					</div>
-				</div>
-			</CardContent>
-
-			{/* Create Room Button */}
-			<CardFooter>
-				<Button
-					disabled={isPending}
-					variant="default"
-					className="w-full py-3 font-semibold"
-					onClick={handleCreateRoom}>
-					{isPending ? "Creating room..." : "CREATE SECURE ROOM"}
-				</Button>
-			</CardFooter>
-		</Card>
+			<TabsContent value="join" className="w-full">
+				{/* Pass roomId to JoinRoom if exists */}
+				<JoinRoom urlRoomId={urlRoomId} />
+			</TabsContent>
+		</Tabs>
 	);
 }
+
+export default Lobby;

@@ -2,6 +2,8 @@ import z from "zod";
 import { User } from "./user.types";
 import { hotRoomSchema, joinRoomSchema } from "@/lib/validations";
 
+export type RoomMode = "host" | "join";
+
 export type Room = {
 	id: string;
 	owner: User;

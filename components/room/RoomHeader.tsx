@@ -17,9 +17,22 @@ function RoomHeader({ roomId }: Props) {
 
 	const handleShare = () => {
 		if (copied) return;
+
 		setCopied(true);
-		navigator.clipboard.writeText(window.location.href);
+
+		// Build shareable URL pointing to /lobby
+		const baseUrl = `${window.location.origin}/lobby`;
+		const params = new URLSearchParams();
+
+		params.set("mode", "join");
+		params.set("roomId", roomId);
+
+		const shareUrl = `${baseUrl}?${params.toString()}`;
+
+		// Copy to clipboard
+		navigator.clipboard.writeText(shareUrl);
 		toast.success("Room URL copied to clipboard");
+
 		setTimeout(() => setCopied(false), 2000);
 	};
 

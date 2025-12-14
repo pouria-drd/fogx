@@ -1,15 +1,15 @@
 import { nanoid } from "nanoid";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { SESSION_NAME } from "@/constants";
 import { RoomService } from "@/lib/server/services";
 import type { ApiResponse, JoinRoomData, Room, User } from "@/types";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
 	try {
 		const data = (await req.json()) as JoinRoomData;
 
-		const token = nanoid();
+		const token = req.cookies.get(SESSION_NAME)?.value ?? nanoid();
 
 		const user: User = {
 			id: token,
@@ -20,14 +20,11 @@ export async function POST(req: Request) {
 
 		if (result.success) {
 			// Success response
-			const successResponse: ApiResponse<User> = {
+			const successResponse: ApiResponse<Room> = {
 				success: true,
 				statusCode: 200,
 				message: "Room joined successfully",
-				data: {
-					user: user,
-					room: result.data,
-				},
+				data: result.data,
 			};
 
 			const response = NextResponse.json(successResponse, {
@@ -48,7 +45,7 @@ export async function POST(req: Request) {
 		const errorResponse: ApiResponse<Room> = {
 			success: false,
 			statusCode: 400,
-			message: "Invalid data!",
+			message: "Failed to join room!",
 			errors: result.errors,
 		};
 

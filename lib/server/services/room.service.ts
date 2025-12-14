@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { hotRoomSchema } from "@/lib/validations";
+import { hotRoomSchema, joinRoomSchema } from "@/lib/validations";
 import { RoomRepository } from "@/lib/server/repositories";
 import type {
 	HostRoomData,
@@ -20,7 +20,10 @@ export class RoomService {
 	 * - Delegate persistence to repository
 	 * - Translate low-level failures into user-friendly errors
 	 */
-	static async createRoom(data: HostRoomData): Promise<ServerResult<Room>> {
+	static async createRoom(
+		data: HostRoomData,
+		token: string,
+	): Promise<ServerResult<Room>> {
 		try {
 			// Validate incoming payload
 			const result = this.validate(hotRoomSchema, data);
@@ -31,8 +34,11 @@ export class RoomService {
 				};
 			}
 
+			// Extract validated data
+			const validatedData = result.data;
+
 			// Create room via repository
-			const room = await RoomRepository.createRoom(data);
+			const room = await RoomRepository.createRoom(validatedData, token);
 
 			// Check if room was created successfully (Redis error, pipeline failure, etc.)
 			if (!room) {
@@ -75,8 +81,27 @@ export class RoomService {
 		user: User,
 	): Promise<ServerResult<Room>> {
 		try {
+			// Validate incoming payload
+			const result = this.validate(joinRoomSchema, {
+				roomId,
+				username: user.username,
+			});
+			if (!result.success) {
+				return {
+					success: false,
+					errors: {
+						fieldErrors: {},
+						formErrors: ["Invalid data!"],
+					},
+				};
+			}
+
+			const validatedData = result.data;
+
 			// Fetch room
-			const roomExists = await RoomRepository.getRoom(roomId);
+			const roomExists = await RoomRepository.getRoom(
+				validatedData.roomId,
+			);
 
 			// Room not found or expired
 			if (!roomExists) {
@@ -90,18 +115,21 @@ export class RoomService {
 			}
 
 			// Prevent duplicate joins
-			if (roomExists.participants.some((p) => p.id === user.id)) {
+			const alreadyJoined = roomExists.participants.find(
+				(p) => p.id === user.id,
+			);
+			if (alreadyJoined) {
 				return {
-					success: false,
-					errors: {
-						fieldErrors: {},
-						formErrors: ["You are already in this room!"],
-					},
+					success: true,
+					data: roomExists,
 				};
 			}
 
 			// Enforce room capacity
-			if (roomExists.participants.length >= roomExists.maxParticipants) {
+			if (
+				!alreadyJoined &&
+				roomExists.participants.length >= roomExists.maxParticipants
+			) {
 				return {
 					success: false,
 					errors: {
@@ -112,7 +140,10 @@ export class RoomService {
 			}
 
 			// Add user to room
-			const room = await RoomRepository.joinRoom(roomId, user);
+			const room = await RoomRepository.joinRoom(
+				validatedData.roomId,
+				user,
+			);
 
 			// Check if room was joined successfully (Redis error, pipeline failure, etc.)
 			if (!room) {

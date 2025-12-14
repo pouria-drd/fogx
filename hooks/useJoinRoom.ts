@@ -1,32 +1,35 @@
 "use client";
 
 import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 
 import { isApiSuccess } from "@/lib/client/api";
 import { RoomService } from "@/lib/client/services";
-import type { ApiResponse, HostRoomData, Room } from "@/types";
+import type { ApiResponse, JoinRoomData, Room } from "@/types";
 
 /**
- * Hook to create a new room.
+ * Hook to join a room.
  */
-function useRoom() {
+function useJoinRoom() {
 	const router = useRouter();
 
-	const { mutate: hostRoom, isPending } = useMutation<
+	const { mutate: joinRoom, isPending } = useMutation<
 		ApiResponse<Room>, // success value
 		ApiResponse<Room>, // error value (thrown)
-		HostRoomData // variables
+		JoinRoomData // variables
 	>({
 		// Mutation function returns ApiResponse<Room>
-		mutationFn: (data) => RoomService.hostRoom(data),
+		mutationFn: (data) => RoomService.joinRoom(data),
 
-		onError: (err) => {
-			toast.error(err.message || "Failed to create room");
-
+		onError: (response) => {
 			if (process.env.NODE_ENV === "development") {
-				console.error("useRoom.onError:", err);
+				console.error("useJoinRoom.onError:", response);
+			}
+
+			if (!isApiSuccess(response)) {
+				toast.error(response.errors.formErrors[0] || "Failed to join!");
+				return;
 			}
 		},
 
@@ -44,20 +47,20 @@ function useRoom() {
 				return;
 			}
 
-			if (process.env.NODE_ENV === "development") {
-				console.log("Room Data:", room);
-			}
+			// if (process.env.NODE_ENV === "development") {
+			// 	console.log("Room Data:", room);
+			// }
 
-			toast.success("Room created successfully!");
+			toast.success("Room joined successfully!");
 
 			router.push(`/rooms/${room.id}` as "/");
 		},
 	});
 
 	return {
-		hostRoom,
+		joinRoom,
 		isPending,
 	};
 }
 
-export default useRoom;
+export default useJoinRoom;
